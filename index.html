@@ -44,7 +44,9 @@
                     throw error;
                 }
 
-            
+                const table = document.getElementById('issueTable').getElementsByTagName('tbody')[0];
+                table.innerHTML = ''; // مسح الجدول قبل إضافة البيانات الجديدة
+
                 data.forEach(row => {
                     const newRow = table.insertRow();
                     const cell1 = newRow.insertCell(0);
