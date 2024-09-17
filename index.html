@@ -8,11 +8,10 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
         const supabaseUrl = 'https://uklzhyeolmjqpjkpncdu.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrbHpoeWVvbG1qcXBqa3BuY2R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY1MTMyMTMsImV4cCI6MjA0MjA4OTIxM30.j2RWLX-LUDaOCl1pga7HlUiVPTTaVPa_MXnak3w82T4';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInVrbHpoeWVvbG1qcXBqa3BuY2R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY1MTMyMTMsImV4cCI6MjA0MjA4OTIxM30.j2RWLX-LUDaOCl1pga7HlUiVPTTaVPa_MXnak3w82T4';
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         async function addData() {
-            console.log('addData function called');
             const column1Value = document.getElementById('column1').value;
             const column2Value = document.getElementById('column2').value;
 
@@ -27,20 +26,39 @@
                     throw error;
                 }
 
-                console.log('Data added successfully:', data);
                 alert('تم إضافة البيانات بنجاح!');
-                // تحديث الجدول في الصفحة
-                const table = document.getElementById('issueTable').getElementsByTagName('tbody')[0];
-                const newRow = table.insertRow();
-                const cell1 = newRow.insertCell(0);
-                const cell2 = newRow.insertCell(1);
-                cell1.textContent = column1Value;
-                cell2.textContent = column2Value;
+                fetchData(); // جلب البيانات بعد الإضافة
             } catch (error) {
                 console.error('Error adding data:', error);
                 alert('حدث خطأ أثناء إضافة البيانات.');
             }
         }
+
+        async function fetchData() {
+            try {
+                const { data, error } = await supabase
+                    .from('issue')
+                    .select('*');
+
+                if (error) {
+                    throw error;
+                }
+
+            
+                data.forEach(row => {
+                    const newRow = table.insertRow();
+                    const cell1 = newRow.insertCell(0);
+                    const cell2 = newRow.insertCell(1);
+                    cell1.textContent = row.column1;
+                    cell2.textContent = row.column2;
+                });
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // جلب البيانات عند تحميل الصفحة
+        window.onload = fetchData;
 
         // جعل الدالة متاحة في النطاق العام
         window.addData = addData;
