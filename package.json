@@ -1,0 +1,24 @@
+{
+  "name": "myproject",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sallygh/law-sy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sallygh/law-sy/issues"
+  },
+  "homepage": "https://github.com/sallygh/law-sy#readme",
+  "description": ""
+}

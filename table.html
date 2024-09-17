@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جدول البيانات</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            direction: rtl;
+            text-align: right;
+        }
+        .sticky-buttons {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: white;
+            padding: 10px 0;
+        }
+    </style>
+    <style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .printableArea, .printableArea * {
+            visibility: visible;
+        }
+        .printableArea {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        .printableArea th:last-child, .printableArea td:last-child {
+            display: none;
+        }
+    }
+</style>
+
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-15">
+                <div class="sticky-buttons">
+                    <input type="text" id="searchInput" class="form-control mb-3" placeholder="بحث...">
+                    <button type="button" class="btn btn-secondary" onclick="printTable()">طباعة الجدول</button>
+                    <button type="button" class="btn btn-success" onclick="exportToExcel()">تصدير إلى Excel</button>
+                    <a href="index.html" class="btn btn-primary">العودة إلى النموذج</a>
+                </div>
+                <table class="table table-bordered table table-bordered printableArea">
+                    <thead>
+                        <tr>
+                            <th> رقم القضية</th>
+                            <th> تاريخ القيد</th>
+                            <th>اسم المدعي  </th>
+                            <th>اسم المدعى عليه   </th>
+                            <th> نوع القضية </th>
+                            <th> تصنيف القضية  </th>
+                             <th> حالة القضية </th>
+                             <th>  رقم القرار </th>
+                             <th> رقم الأساس</th>
+                            <th> إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const dataList = JSON.parse(localStorage.getItem('dataList')) || [];
+    const tableBody = document.getElementById('tableBody');
+
+    dataList.forEach((data, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${data.issue_num}</td>
+            <td>${data.issue_date}</td>
+            <td>${data.plaintiff_name}</td>
+            <td>${data.defendant_name}</td>
+            <td>${data.issue_type}</td>
+            <td>${data.issue_type2 || ''}</td>
+            <td>${data.issue_status}</td>
+            <td>${data.decision_num}</td>
+            <td>${data.base_num}</td>
+            <td>
+                <button class="btn btn-warning btn-sm" onclick="editData(${index})">تعديل</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteData(${index})">حذف</button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const searchValue = this.value.toLowerCase();
+        const filteredData = dataList.filter(data => 
+            data.issue_num.toLowerCase().includes(searchValue) ||
+            data.issue_date.toLowerCase().includes(searchValue) ||
+            data.plaintiff_name.toLowerCase().includes(searchValue) ||
+            data.defendant_name.toLowerCase().includes(searchValue) ||
+            data.issue_type.toLowerCase().includes(searchValue) ||
+            (data.issue_type2 && data.issue_type2.toLowerCase().includes(searchValue)) ||
+            data.issue_status.toLowerCase().includes(searchValue) ||
+            data.decision_num.toLowerCase().includes(searchValue) ||
+            data.base_num.toLowerCase().includes(searchValue)
+        );
+
+        tableBody.innerHTML = '';
+        filteredData.forEach((data, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${data.issue_num}</td>
+                <td>${data.issue_date}</td>
+                <td>${data.plaintiff_name}</td>
+                <td>${data.defendant_name}</td>
+                <td>${data.issue_type}</td>
+                <td>${data.issue_type2 || ''}</td>
+                <td>${data.issue_status}</td>
+                <td>${data.decision_num}</td>
+                <td>${data.base_num}</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="editData(${index})">تعديل</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteData(${index})">حذف</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    });
+});
+
+function editData(index) {
+    const dataList = JSON.parse(localStorage.getItem('dataList')) || [];
+    const data = dataList[index];
+    localStorage.setItem('editData', JSON.stringify(data));
+    localStorage.setItem('editIndex', index); // تخزين الفهرس
+    window.location.href = 'index.html';
+}
+
+function deleteData(index) {
+    const dataList = JSON.parse(localStorage.getItem('dataList')) || [];
+    dataList.splice(index, 1);
+    localStorage.setItem('dataList', JSON.stringify(dataList));
+    location.reload();
+}
+
+function printTable() {
+    window.print();
+}
+
+function exportToExcel() {
+    // الحصول على بيانات الجدول
+    const table = document.getElementById('tableBody');
+    const rows = table.querySelectorAll('tr');
+    const data = [];
+
+    // إضافة رؤوس الأعمدة
+    data.push([
+        'رقم القضية', 'تاريخ القيد', 'اسم المدعي', 'اسم المدعى عليه', 
+        'نوع القضية', 'تصنيف القضية', 'حالة القضية', 'رقم القرار', 'رقم الأساس'
+    ]);
+
+    // إضافة بيانات الصفوف
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const rowData = [];
+        cells.forEach(cell => {
+            rowData.push(cell.innerText);
+        });
+        data.push(rowData);
+    });
+
+    // إنشاء ورقة عمل
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+    // إنشاء مصنف
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'البيانات');
+
+    // تصدير الملف
+    XLSX.writeFile(workbook, 'data.xlsx');
+}
+
+
+
+    </script>
+</body>
+</html>

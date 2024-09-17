@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Issue Table</title>
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+        const supabaseUrl = 'https://uklzhyeolmjqpjkpncdu.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrbHpoeWVvbG1qcXBqa3BuY2R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY1MTMyMTMsImV4cCI6MjA0MjA4OTIxM30.j2RWLX-LUDaOCl1pga7HlUiVPTTaVPa_MXnak3w82T4';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        async function addData() {
+            console.log('addData function called');
+            const column1Value = document.getElementById('column1').value;
+            const column2Value = document.getElementById('column2').value;
+
+            try {
+                const { data, error } = await supabase
+                    .from('issue')
+                    .insert([
+                        { column1: column1Value, column2: column2Value }
+                    ]);
+
+                if (error) {
+                    throw error;
+                }
+
+                console.log('Data added successfully:', data);
+                alert('تم إضافة البيانات بنجاح!');
+                // تحديث الجدول في الصفحة
+                const table = document.getElementById('issueTable').getElementsByTagName('tbody')[0];
+                const newRow = table.insertRow();
+                const cell1 = newRow.insertCell(0);
+                const cell2 = newRow.insertCell(1);
+                cell1.textContent = column1Value;
+                cell2.textContent = column2Value;
+            } catch (error) {
+                console.error('Error adding data:', error);
+                alert('حدث خطأ أثناء إضافة البيانات.');
+            }
+        }
+
+        // جعل الدالة متاحة في النطاق العام
+        window.addData = addData;
+    </script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Issue Table</h1>
+    <form onsubmit="event.preventDefault(); addData();">
+        <label for="column1">Column 1:</label>
+        <input type="text" id="column1" name="column1" required>
+        <br>
+        <label for="column2">Column 2:</label>
+        <input type="text" id="column2" name="column2" required>
+        <br>
+        <button type="submit">Add Data</button>
+    </form>
+    <table id="issueTable">
+        <thead>
+            <tr>
+                <th>Column 1</th>
+                <th>Column 2</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- سيتم إضافة الصفوف هنا -->
+        </tbody>
+    </table>
+</body>
+</html>
