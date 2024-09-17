@@ -3,103 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supabase Issue Table</title>
+    <title>Work Form</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        import supabase from './supabaseClient.js';
 
-        const supabaseUrl = 'https://uklzhyeolmjqpjkpncdu.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrbHpoeWVvbG1qcXBqa3BuY2R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY1MTMyMTMsImV4cCI6MjA0MjA4OTIxM30.j2RWLX-LUDaOCl1pga7HlUiVPTTaVPa_MXnak3w82T4';
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        async function checkName() {
+            const nameInput = document.getElementById('name').value;
+            const { data, error } = await supabase
+                .from('name')
+                .select('*')
+                .ilike('first_name', `${nameInput}%`);
 
-        async function addData() {
-            const column1Value = document.getElementById('column1').value;
-            const column2Value = document.getElementById('column2').value;
-
-            try {
-                const { data, error } = await supabase
-                    .from('issue')
-                    .insert([
-                        { column1: column1Value, column2: column2Value }
-                    ]);
-
-                if (error) {
-                    throw error;
-                }
-
-                alert('تم إضافة البيانات بنجاح!');
-                fetchData(); // جلب البيانات بعد الإضافة
-            } catch (error) {
-                console.error('Error adding data:', error);
-                alert('حدث خطأ أثناء إضافة البيانات.');
+            if (data.length === 0) {
+                document.getElementById('namePopup').style.display = 'block';
+            } else {
+                document.getElementById('namePopup').style.display = 'none';
+                // يمكنك إضافة قائمة منسدلة هنا لعرض الأسماء الموجودة
             }
         }
 
-        async function fetchData() {
-            try {
-                const { data, error } = await supabase
-                    .from('issue')
-                    .select('*');
+        document.getElementById('workForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const nameInput = document.getElementById('name').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const job = document.getElementById('job').value;
 
-                if (error) {
-                    throw error;
-                }
+            let nameId;
+            const { data: existingName } = await supabase
+                .from('name')
+                .select('*')
+                .eq('first_name', nameInput);
 
-                const table = document.getElementById('issueTable').getElementsByTagName('tbody')[0];
-                table.innerHTML = ''; // مسح الجدول قبل إضافة البيانات الجديدة
-
-                data.forEach(row => {
-                    const newRow = table.insertRow();
-                    const cell1 = newRow.insertCell(0);
-                    const cell2 = newRow.insertCell(1);
-                    cell1.textContent = row.column1;
-                    cell2.textContent = row.column2;
-                });
-            } catch (error) {
-                console.error('Error fetching data:', error);
+            if (existingName.length === 0) {
+                const { data: newName } = await supabase
+                    .from('name')
+                    .insert([{ first_name: firstName, last_name: lastName }])
+                    .select();
+                nameId = newName[0].id;
+            } else {
+                nameId = existingName[0].id;
             }
-        }
 
-        // جلب البيانات عند تحميل الصفحة
-        window.onload = fetchData;
-
-        // جعل الدالة متاحة في النطاق العام
-        window.addData = addData;
+            await supabase
+                .from('work')
+                .insert([{ name_id: nameId, job }]);
+        });
     </script>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-        }
-    </style>
 </head>
 <body>
-    <h1>Issue Table</h1>
-    <form onsubmit="event.preventDefault(); addData();">
-        <label for="column1">Column 1:</label>
-        <input type="text" id="column1" name="column1" required>
-        <br>
-        <label for="column2">Column 2:</label>
-        <input type="text" id="column2" name="column2" required>
-        <br>
-        <button type="submit">Add Data</button>
+    <form id="workForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" oninput="checkName()">
+        <div id="namePopup" style="display:none;">
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" name="firstName">
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" name="lastName">
+        </div>
+        <label for="job">Job:</label>
+        <input type="text" id="job" name="job">
+        <button type="submit">Submit</button>
     </form>
-    <table id="issueTable">
-        <thead>
-            <tr>
-                <th>Column 1</th>
-                <th>Column 2</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- سيتم إضافة الصفوف هنا -->
-        </tbody>
-    </table>
 </body>
 </html>
