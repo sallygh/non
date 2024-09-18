@@ -1,39 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Page Title</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-<style>
-  body, html {
-    height: 100%;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: 'Cairo', sans-serif;
-  }
-  .button-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  .btn {
-    font-size: 20px; /* زيادة حجم الخط */
-    padding: 15px 30px; /* زيادة الحشوة */
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Form</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            async function checkName() {
+                const nameInput = document.getElementById('name').value;
+                const { data, error } = await supabase
+                    .from('name')
+                    .select('*')
+                    .ilike('first_name', `${nameInput}%`);
+
+                if (data.length === 0) {
+                    document.getElementById('namePopup').style.display = 'block';
+                } else {
+                    document.getElementById('namePopup').style.display = 'none';
+                    // يمكنك إضافة قائمة منسدلة هنا لعرض الأسماء الموجودة
+                }
+            }
+
+            document.getElementById('name').addEventListener('input', checkName);
+
+            document.getElementById('workForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const nameInput = document.getElementById('name').value;
+                const firstName = document.getElementById('firstName').value;
+                const lastName = document.getElementById('lastName').value;
+                const job = document.getElementById('job').value;
+
+                let nameId;
+                const { data: existingName } = await supabase
+                    .from('name')
+                    .select('*')
+                    .eq('first_name', nameInput);
+
+                if (existingName.length === 0) {
+                    const { data: newName } = await supabase
+                        .from('name')
+                        .insert([{ first_name: firstName, last_name: lastName }])
+                        .select();
+                    nameId = newName[0].id;
+                } else {
+                    nameId = existingName[0].id;
+                }
+
+                await supabase
+                    .from('work')
+                    .insert([{ name_id: nameId, job }]);
+            });
+        });
+    </script>
 </head>
 <body>
-<div class="button-grid">
-  <button type="button" class="btn btn-outline-primary">تصفح القضايا </button>
-  <form action="index.html" method="get">
-    <button type="submit" class="btn btn-outline-secondary">إضافة قضية</button>
-  </form>
-  <button type="button" class="btn btn-outline-success">أسماء الموكلين  </button>
-  <button type="button" class="btn btn-outline-danger"> إضافة اسم موكل</button>
-  <button type="button" class="btn btn-outline-warning">إضافة مهمة </button>
-  <button type="button" class="btn btn-outline-info">تصفح المهام </button>
-  <button type="button" class="btn btn-outline-dark">بحث</button>
-</div>
+    <form id="workForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name">
+        <div id="namePopup" style="display:none;">
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" name="firstName">
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" name="lastName">
+        </div>
+        <label for="job">Job:</label>
+        <input type="text" id="job" name="job">
+        <button type="submit">Submit</button>
+    </form>
 </body>
 </html>
