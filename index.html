@@ -6,49 +6,49 @@
     <title>Work Form</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script>
-        
-
-        async function checkName() {
-            const nameInput = document.getElementById('name').value;
-            const { data, error } = await supabase
-                .from('name')
-                .select('*')
-                .ilike('first_name', `${nameInput}%`);
-
-            if (data.length === 0) {
-                document.getElementById('namePopup').style.display = 'block';
-            } else {
-                document.getElementById('namePopup').style.display = 'none';
-                // يمكنك إضافة قائمة منسدلة هنا لعرض الأسماء الموجودة
-            }
-        }
-
-        document.getElementById('workForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const nameInput = document.getElementById('name').value;
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const job = document.getElementById('job').value;
-
-            let nameId;
-            const { data: existingName } = await supabase
-                .from('name')
-                .select('*')
-                .eq('first_name', nameInput);
-
-            if (existingName.length === 0) {
-                const { data: newName } = await supabase
+        document.addEventListener("DOMContentLoaded", function() {
+            async function checkName() {
+                const nameInput = document.getElementById('name').value;
+                const { data, error } = await supabase
                     .from('name')
-                    .insert([{ first_name: firstName, last_name: lastName }])
-                    .select();
-                nameId = newName[0].id;
-            } else {
-                nameId = existingName[0].id;
+                    .select('*')
+                    .ilike('first_name', `${nameInput}%`);
+
+                if (data.length === 0) {
+                    document.getElementById('namePopup').style.display = 'block';
+                } else {
+                    document.getElementById('namePopup').style.display = 'none';
+                    // يمكنك إضافة قائمة منسدلة هنا لعرض الأسماء الموجودة
+                }
             }
 
-            await supabase
-                .from('work')
-                .insert([{ name_id: nameId, job }]);
+            document.getElementById('workForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const nameInput = document.getElementById('name').value;
+                const firstName = document.getElementById('firstName').value;
+                const lastName = document.getElementById('lastName').value;
+                const job = document.getElementById('job').value;
+
+                let nameId;
+                const { data: existingName } = await supabase
+                    .from('name')
+                    .select('*')
+                    .eq('first_name', nameInput);
+
+                if (existingName.length === 0) {
+                    const { data: newName } = await supabase
+                        .from('name')
+                        .insert([{ first_name: firstName, last_name: lastName }])
+                        .select();
+                    nameId = newName[0].id;
+                } else {
+                    nameId = existingName[0].id;
+                }
+
+                await supabase
+                    .from('work')
+                    .insert([{ name_id: nameId, job }]);
+            });
         });
     </script>
 </head>
